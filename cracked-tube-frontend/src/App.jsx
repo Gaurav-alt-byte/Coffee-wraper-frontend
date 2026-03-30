@@ -1,14 +1,24 @@
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Login from './pages/Login'; 
+import Home from './pages/Home';
+
 function App() {
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-900">
-      <div className="p-10 bg-white rounded-2xl shadow-2xl">
-        <h1 className="text-3xl font-black text-indigo-600">
-          Tailwind v4 is Live! 🚀
-        </h1>
-        <p className="text-slate-500 mt-2">Your frontend environment is finally stable.</p>
+    <Router>
+      <div className="min-h-screen bg-black text-white">
+        <Navbar /> 
+        <main className="container mx-auto px-4 py-6">
+          <Routes>
+            {/* Swap the hidden text for the actual Home component */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </main>
       </div>
-    </div>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
