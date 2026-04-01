@@ -1,73 +1,105 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import apiClient from "../api/axios.js";
+import VideoCard from "../components/VideoCard.jsx";
 
-import api from "../api/axios";
-import { Play } from "lucide-react";
+const categories = ["All", "Gaming", "Music", "Mixes", "Live", "Programming", "Tweets", "News", "Recent"];
 
-const Home = () => {
+const Home = ({ refreshKey = 0 }) => {
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q")?.trim() || "";
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
-    const fetchFeed = async () => {
+    const fetchVideos = async () => {
+      setLoading(true);
       try {
-        // Calling your 'feedGenerator youtube' endpoint
-        const response = await api.get("/videos/watch-videos");
-        // Adjust this based on your exact backend response structure
-        setVideos(response.data.data || []); 
-      } catch (error) {
-        console.error("Error fetching videos:", error);
+        const response = query
+          ? await apiClient.get(`/videos/search?q=${encodeURIComponent(query)}`)
+          : await apiClient.get("/videos/watch-Videos?limit=24");
+
+        setVideos(Array.isArray(response.data) ? response.data : []);
+      } catch {
+        setVideos([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchFeed();
-  }, []);
+
+    fetchVideos();
+  }, [query, refreshKey]);
+
+  const title = useMemo(() => {
+    if (query) {
+      return `Search results for “${query}”`;
+    }
+
+    return "Home";
+  }, [query]);
 
   if (loading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-red-600"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="py-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {videos.map((video) => (
-          <div key={video._id} className="group cursor-pointer">
-            {/* Thumbnail Container */}
-            <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-800">
-              <img
-                src={video.thumbnail}
-                alt={video.tittle}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-              />
-              <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-medium">
-                {video.duration || "10:00"}
-              </div>
-            </div>
-
-            {/* Video Info */}
-            <div className="mt-3 flex gap-3">
-              <div className="h-9 w-9 flex-shrink-0 rounded-full bg-zinc-700 overflow-hidden">
-                <img src={video.owner?.avatar} alt="" className="h-full w-full object-cover" />
-              </div>
-              <div>
-                <h3 className="line-clamp-2 text-sm font-bold leading-snug text-white">
-                  {video.tittle}
-                </h3>
-                <p className="mt-1 text-xs text-zinc-400">{video.owner?.fullname}</p>
-                <p className="text-xs text-zinc-400">{video.views} views • Just now</p>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-10 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="animate-pulse space-y-3">
+            <div className="aspect-video rounded-2xl bg-zinc-800" />
+            <div className="flex gap-3">
+              <div className="h-10 w-10 rounded-full bg-zinc-800" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-3/4 rounded bg-zinc-800" />
+                <div className="h-3 w-1/2 rounded bg-zinc-800" />
               </div>
             </div>
           </div>
         ))}
       </div>
-      
-      {videos.length === 0 && (
-        <div className="text-center text-zinc-500 mt-20">
-          No videos found. Start uploading!
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] px-4 pb-20 pt-2">
+      <div className="sticky top-16 z-30 -mx-4 border-b border-white/5 bg-[#0f0f0f]/95 px-4 py-3 backdrop-blur">
+        <div className="flex gap-3 overflow-x-auto">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setActiveCategory(category)}
+              className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition ${
+                activeCategory === category
+                  ? "bg-white text-black"
+                  : "bg-zinc-800 text-white hover:bg-zinc-700"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4 pb-2">
+        <div>
+          <h1 className="text-xl font-bold text-white">{title}</h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            {query ? "Results from your backend search endpoint" : "Latest uploads and recommended videos"}
+          </p>
+        </div>
+      </div>
+
+      {videos.length ? (
+        <div className="grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          {videos.map((video) => (
+            <VideoCard key={video._id} video={video} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-6 text-center">
+          <div>
+            <h2 className="text-2xl font-bold text-white">No videos found</h2>
+            <p className="mt-2 text-sm text-zinc-400">Try another search or come back later for fresh uploads.</p>
+          </div>
         </div>
       )}
     </div>

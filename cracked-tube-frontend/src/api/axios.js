@@ -1,8 +1,16 @@
 import axios from "axios";
 
-const api = axios.create({
-    baseURL : import.meta.env.VITE_API_BASE_URL,
-    withCredentials:true,
-})
+const apiClient = axios.create({
+  baseURL: "https://cracked-tube.onrender.com/api/v1",
+  withCredentials: true,
+});
 
-export default api;
+apiClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    const message = error.response?.data?.message || "Server Error";
+    return Promise.reject(message);
+  },
+);
+
+export default apiClient;
