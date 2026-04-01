@@ -14,6 +14,10 @@ import History from "./pages/History.jsx";
 import LikedVideos from "./pages/LikedVideos.jsx";
 import TweetsFeed from "./pages/TweetsFeed.jsx";
 import Collections from "./pages/Collections.jsx";
+import PlaylistDetail from "./pages/PlaylistDetail.jsx";
+import Trending from "./pages/Trending.jsx";
+import CreatorStudio from "./pages/CreatorStudio.jsx";
+import SubscribedFeed from "./pages/SubscribedFeed.jsx";
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -57,6 +61,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={routes.home} />
               <Route path="/search" element={routes.home} />
+              <Route path="/trending" element={<Trending />} />
+              <Route path="/subscribed" element={user ? <SubscribedFeed /> : <Navigate to="/login" replace />} />
               <Route path="/video/:videoId" element={<VideoPlayer />} />
               <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
               <Route path="/register" element={!user ? <Register /> : <Navigate to="/" replace />} />
@@ -64,6 +70,8 @@ const App = () => {
               <Route path="/history" element={user ? <History /> : <Navigate to="/login" replace />} />
               <Route path="/liked-videos" element={user ? <LikedVideos /> : <Navigate to="/login" replace />} />
               <Route path="/collections" element={user ? <Collections /> : <Navigate to="/login" replace />} />
+              <Route path="/playlist/:playlistId" element={user ? <PlaylistDetail /> : <Navigate to="/login" replace />} />
+              <Route path="/studio" element={user ? <CreatorStudio /> : <Navigate to="/login" replace />} />
               <Route path="/profile" element={user ? <Navigate to={`/channel/${user.username}`} replace /> : <Navigate to="/login" replace />} />
               <Route path="/channel/:username" element={user ? <Profile /> : <Navigate to="/login" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
